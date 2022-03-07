@@ -24,6 +24,9 @@ int start = 0;
 int rBound = 80;
 int moveDir = 0;
 
+unsigned int xMax  = display.width()/2+2;
+unsigned int xMin  = 0;
+
 
 
 const unsigned char map1 [] PROGMEM = {
@@ -246,7 +249,7 @@ int TickFct_Player(int state) {
     case Player_init:
       //default position left of the screen
       Serial.println("Player_init2");
-      playerX = display.width()/2-9;
+      playerX = 0;
       playerY = display.height()-18;
        //int z = 10;
 
@@ -349,7 +352,9 @@ int TickFct_Player(int state) {
       if (xDir == 1) {
         Serial.println("+x");
         Serial.println(xPosition);
-        playerX  += 4;
+        if (playerX < xMax) {
+          playerX  += 4;
+        }
         moveDir = 1;
         state = Player_draw;
         break;
@@ -358,7 +363,9 @@ int TickFct_Player(int state) {
       if (xDir == 2) {
         Serial.println("-x");
         Serial.println(xPosition);
-        playerX  -= 4;
+        if (playerX > xMin) {
+          playerX  -= 4;
+        }
         moveDir = 2;
         state = Player_draw;
       }

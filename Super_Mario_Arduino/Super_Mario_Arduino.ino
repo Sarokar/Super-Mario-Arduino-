@@ -14,42 +14,44 @@
 Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
 
 //mario position
+bool gg;
 unsigned long playerX;
 unsigned long playerY;
-unsigned int mapWidth = 0;
+unsigned int mapWidth;
 unsigned int i;
 unsigned int minY;
-unsigned int mapTaype = 1;
+unsigned int mapType;
 
 unsigned int mapWidth1;
 unsigned int mapWidth2;
-bool yesCol = 0;
-unsigned int dist = 10;
+bool yesCol;
+bool didFall;
+unsigned int dist;
 
 //inputx
-bool mvmt = 0;
-unsigned int jump = 0;
-bool iteration = 0;
-int statusA = 0;
+bool mvmt;
+unsigned int jump;
+bool iteration;
+int statusA;
 signed int VRx = A1;
 signed int VRy = A0;
- unsigned int xPosition = 0;
- unsigned int xPosition2 = 0;
-unsigned int yPosition = 0;
-signed int xDir = 0;
-signed int offset = 4;
-signed int yoffset = 10;
-int last_posX = 1;
-bool inAir = 0;
-int last_posY = display.height()-18;
-//Vector2f player_pos(0,display.height()-18);
+ unsigned int xPosition;
+ unsigned int xPosition2;
+unsigned int yPosition;
+signed int xDir;
+signed int offset;
+signed int yoffset;
+int last_posX;
+bool inAir;
+int last_posY;
 
-unsigned int yDir=0;
-unsigned int start = 0;
-unsigned int rBound = 80;
-unsigned int moveDir = 0;
-unsigned int jmpFrame = 0;
+unsigned int yDir;
+unsigned int start;
+unsigned int rBound;
+unsigned int moveDir;
+unsigned int jmpFrame;
 #define a2 A2
+#define a3 A3
 
 unsigned int xMax  = display.width()/2+2;
 unsigned int xMin  = 0;
@@ -122,6 +124,10 @@ const unsigned char marioWalk [] PROGMEM = {
   0x4f, 0xc4, 
   0x44, 0x88, 
   0x38, 0x70
+};
+
+const unsigned char coin [] PROGMEM = {
+  0x38, 0x44, 0x54, 0x92, 0x92, 0x96, 0x44, 0x38
 };
 
 const unsigned char marioLeft [] PROGMEM = {
@@ -349,18 +355,18 @@ struct Collisions {
 struct Collisions allCol[4];
 
 void checkCollisions() {
-//  Serial.println("Collision Start");
+  Serial.println("Collision Start");
   for (unsigned int l = 0; l<4; l++) {
-//    Serial.println("Collsion1");
+    Serial.println("Collsion1");
 //     Serial.println("i: ");
 //     Serial.print(l);
     //Serial.println(last_posX);
     if ((allCol[l].xCor == last_posX) || (allCol[l].xCor+16 >= last_posX)) {
-//      Serial.println("Collsion2");
+      Serial.println("Collsion2");
 //       Serial.println(allCol[l].yCor);
 //       Serial.println(last_posY);
       if (allCol[l].yCor > last_posY-1) {
-//        Serial.println("Collision Detected");
+        Serial.println("Collision Detected");
         //a elevated platform is present
         minY = allCol[l].yCor;
 //        Serial.println(minY);
@@ -371,15 +377,16 @@ void checkCollisions() {
     }
     else {
       //Falls
+      yesCol = 0;
 //       Serial.println(last_posX);
 //      Serial.println("netural");
 //      if (mapType == 1) {
-        minY = display.height()-18;
-//      }
-
-      //map with fall
-//      if (mapType == 2) {
 //        minY = display.height()-18;
+//      }
+//
+//      //map with fall
+//      if (mapType == 2) {
+//        minY = display.height();
 //      }
 //      last_posY = display.height()-18;
       //break;
@@ -390,21 +397,39 @@ void checkCollisions() {
 }
 
 void drawPlayer() {
+//  if (yesCol) {
+//              Serial.println("yesCol");
+//              playerY = minY;
+//              last_posY = minY;
+//            }
+           
   //non jumping animations
   if (!inAir) {
     
     if (xDir == 0) {
-        display.drawBitmap(last_posX, minY,  Mario, 16, 16, 1);  
+        display.drawBitmap(last_posX, last_posY,  Mario, 16, 16, 1);  
+
 //        display.drawBitmap(21, 18,  Mario, 16, 16, 1); 
 //        display.drawBitmap(45, 10,  Mario, 16, 16, 1);   
 //        display.drawBitmap(20, 25,  Mario, 16, 16, 1); 
 //        Serial.println(last_posX);
 //        Serial.println(last_posY);
+          
       }
     //walking to the right
     
     else if (xDir == 1) {
-      display.drawBitmap(last_posX, minY,  marioWalk, 16, 16, 1);
+      display.drawBitmap(last_posX, last_posY,  marioWalk, 16, 16, 1);
+      
+       if (!yesCol) {
+              Serial.println("!yesCol");
+              if (mapType == 2) {
+                Serial.println("fall");
+                last_posY = display.height();
+                gg = 1;
+              }
+            }
+ 
 //      Serial.println(last_posX);
       xDir = 0;
       //dist++;
@@ -412,11 +437,29 @@ void drawPlayer() {
     //walking to the left
     else {
       if (!mvmt) {
-        display.drawBitmap(last_posX, minY,  marioStandLeft, 16, 16, 1);
+        display.drawBitmap(last_posX, last_posY,  marioStandLeft, 16, 16, 1);
+         if (!yesCol) {
+              Serial.println("!yesCol");
+              if (mapType == 2) {
+                Serial.println("fall");
+                last_posY = display.height();
+                gg = 1;
+              }
+            }
+ 
       }
       else {
-        display.drawBitmap(last_posX, minY,  marioWalkLeft, 16, 16, 1);  
+        display.drawBitmap(last_posX, last_posY,  marioWalkLeft, 16, 16, 1);  
         mvmt = 0;
+         if (!yesCol) {
+              Serial.println("!yesCol");
+              if (mapType == 2) {
+                Serial.println("fall");
+                last_posY = display.height();
+                gg = 1;
+              }
+            }
+ 
        // dist--;
       }     
     }
@@ -451,28 +494,32 @@ void drawPlayer() {
       jmpFrame += 2; 
       //Serial.println(jmpFrame); 
       
-      last_posY += 10;
+//      last_posY += 10;
       if (yesCol) {
-//        Serial.println("yesCol");
+        Serial.println("yesCol");
         playerY = minY;
         last_posY = minY;
       }
       if (!yesCol) {
-//        Serial.println("!yesCol");
-        playerY = last_posY;
+        Serial.println("!yesCol");
+        if (mapType == 2) {
+          Serial.println("fall");
+          last_posY = display.height();
+          gg = 1;
+        }
       }
 //      Serial.println(last_posY);
       
-      if ((xDir == 1) || (xDir == 0)) {
-//        Serial.println("Draw final col");
-//        Serial.println(minY);
-        display.drawBitmap(last_posX, minY,  marioJump, 16, 16, 1);
-      }
-      if (xDir == -1) {
-//        Serial.println("Jump Left 2");
-//        Serial.println(last_posX);
-        display.drawBitmap(last_posX, minY,  marioJumpLeft, 16, 16, 1);
-      }
+//      if ((xDir == 1) || (xDir == 0)) {
+////        Serial.println("Draw final col");
+////        Serial.println(minY);
+//        display.drawBitmap(last_posX, last_posY,  marioJump, 16, 16, 1);
+//      }
+//      if (xDir == -1) {
+////        Serial.println("Jump Left 2");
+////        Serial.println(last_posX);
+//        display.drawBitmap(last_posX, last_posY,  marioJumpLeft, 16, 16, 1);
+//      }
       
       if (jmpFrame >= 8) {
         inAir = 0;
@@ -525,7 +572,7 @@ typedef struct task {
 const unsigned short tasksNum = 1;
 task tasks[tasksNum];
 
-enum Player_States {Player_init,Player_draw,Player_movement, Player_Move,Player_yMove, Player_update};
+enum Player_States {Player_init,Player_draw,Player_movement, Player_Move,Player_yMove, Player_update, Player_gg};
 
 int TickFct_Player(int state) { 
   switch(state) {
@@ -535,11 +582,19 @@ int TickFct_Player(int state) {
 
     case Player_update:
        display.clearDisplay(); 
-       //TODO: drawMap
+
+       if (digitalRead(a3) == HIGH) {
+          state = Player_init;
+          break;
+       }
 
         drawMap();
         drawPlayer();
-        
+
+        if (gg) {
+          state = Player_gg;
+          break;
+        }
 
         //mid Air
         if (yDir == 1) {
@@ -568,6 +623,10 @@ int TickFct_Player(int state) {
         if ((analogRead(VRx) > 900)) {
           Serial.println("Right Joystick Detected");
           dist++;
+          if (dist>23) {
+            mapType = 0;
+            last_posY = display.height()-18;
+          }
           //Serial.println(dist);
           xDir = 1;
           mvmt = 1;
@@ -654,9 +713,38 @@ int TickFct_Player(int state) {
       Serial.println("Successful init");
       
       playerX = 1;
-      playerY = display.height()-18;
+      playerY = 25;
       minY = playerY;
-       //int z = 10;
+      last_posY = playerY;
+
+      gg = 0;
+      mapWidth = 0;
+      mapType = 2;
+      yesCol = 1;
+      didFall = 0;
+      dist = 10;
+      
+      mvmt = 0;
+      jump = 0;
+      iteration = 0;
+      statusA = 0;
+      VRx = A1;
+      VRy = A0;
+       xPosition = 0;
+       xPosition2 = 0;
+       yPosition = 0;
+      xDir = 0;
+      offset = 4;
+       yoffset = 8;
+      last_posX = 1;
+      inAir = 0;
+      last_posY;
+      
+       yDir=0;
+       start = 0;
+       rBound = 80;
+       moveDir = 0;
+       jmpFrame = 0;
 
       state = Player_update;
     break;
@@ -670,10 +758,10 @@ int TickFct_Player(int state) {
         //Serial.println("Calculate Movement");
         //last_posX = ((playerX*0.6)/8);
         if ((xDir != 0) || ((xDir == -1) && (mvmt == 0))) {
-//          Serial.println("Distance: ");
-//          Serial.println(dist);
-          Serial.println("X: ");
-          Serial.println(last_posX);
+          Serial.println("Distance: ");
+          Serial.println(dist);
+//          Serial.println("X: ");
+//          Serial.println(last_posX);
           if ((dist > 8) && (dist < 23)) {
 //            Serial.println("yur");
             offset *= xDir;
@@ -685,6 +773,7 @@ int TickFct_Player(int state) {
           
           if (dist>23) {
 //            if ((dist == 47) || (dist == 42)) {
+//            minY = display.height()-18;
             if (dist == 42) {
               mapWidth = 0;
             }
@@ -714,6 +803,12 @@ int TickFct_Player(int state) {
         //Serial.println(last_posX);
     break;
 
+    case Player_gg:
+      gg = 0;
+      state = Player_init;
+
+   break;
+
     default:
     break;
     }
@@ -733,6 +828,7 @@ void setup() {
   pinMode(VRx, INPUT);
   pinMode(VRy, INPUT);
   pinMode(a2, INPUT);
+  pinMode(a3, INPUT);
   
   i = 0;
   tasks[i].state = Player_init;
